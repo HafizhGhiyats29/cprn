@@ -1,0 +1,11 @@
+{
+  "language": {
+    "navigation": "Language"
+  },
+  "verification": {
+    "title": "Architecture verification",
+    "summary": "Temporary page for checking English static rendering and language navigation.",
+    "toggle": "Toggle technical details",
+    "details": "The page can handle interactions after Vue hydrates."
+  }
+}

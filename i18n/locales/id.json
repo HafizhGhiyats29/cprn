@@ -1,0 +1,11 @@
+{
+  "language": {
+    "navigation": "Bahasa"
+  },
+  "verification": {
+    "title": "Verifikasi arsitektur",
+    "summary": "Halaman sementara untuk memeriksa render statis dan navigasi bahasa Indonesia.",
+    "toggle": "Tampilkan atau sembunyikan detail teknis",
+    "details": "Halaman dapat menangani interaksi setelah hidrasi Vue."
+  }
+}

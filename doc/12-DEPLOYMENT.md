@@ -4,7 +4,7 @@ Version 0.1 | Phase 6 draft | Host, domain and access TBD; no deployment execute
 
 ## 1. Proposed deployment approach
 
-SSG is preferred for the public bilingual microsite, subject to Phase 2 confirmation and IT hosting capabilities. Nuxt static output can be published without a running Node server when all required routes are generated and no runtime server features are used. If scope later requires SSR or runtime API, reassess host and architecture before implementation.
+Phase 2 verified Nuxt SSG locally for both locale routes. The Phase 6 deployment candidate is the static `.output/public/` artifact. IT still needs to approve the host, domain, HTTP routing and security controls. If scope later requires SSR or a runtime API, reassess the host and architecture before implementation. [Architecture decisions](07-ARCHITECTURE.md)
 
 | Item | Decision / status |
 |---|---|
@@ -13,8 +13,11 @@ SSG is preferred for the public bilingual microsite, subject to Phase 2 confirma
 | Staging / production access | TBD |
 | Deployment authorization and approver | TBD |
 | CI/CD provider | GitHub Actions proposed, subject to repository/IT policy |
+| CI runner, Node/npm and dependency script policy | Developer and IT to standardize and verify with a clean locked install |
 | TLS, headers, redirects, 404 and cache policy | TBD by host |
 | Previous-release storage / rollback mechanism | TBD by host |
+
+Carry the [dependency triage](17-SECURITY.md) into the release review. Record Phase 5 audit evidence and remediation or authorized risk acceptance. Confirm HTTPS, security headers, root redirect, real 404 responses, cache policy, and rollback on the approved target before release.
 
 ## 2. Candidate build procedure
 

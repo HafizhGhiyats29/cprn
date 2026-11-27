@@ -2,7 +2,7 @@
 
 Version 0.1 | Draft test plan | No tests executed
 
-Sources: [FR](02-FUNCTIONAL-REQUIREMENTS.md), [NFR](03-NON-FUNCTIONAL-REQUIREMENTS.md), [roadmap](05-PROJECT-ROADMAP.md). Test IDs below are initial representative cases, not full coverage; expand traceability to every applicable Must during QA. All actual results are Not Run.
+Sources: [FR](02-FUNCTIONAL-REQUIREMENTS.md), [NFR](03-NON-FUNCTIONAL-REQUIREMENTS.md), [roadmap](05-PROJECT-ROADMAP.md). Test IDs below are initial representative cases. Expand traceability to every applicable Must during QA. All cases in the Phase 5 matrix remain Not Run. The separate [Phase 2 local evidence](07-ARCHITECTURE.md) covers PoC typecheck, five content tests, generated locale HTML, fixture exclusion and local Chrome interactions.
 
 ## 1. Strategy
 
@@ -71,13 +71,15 @@ Proposed tools: Vitest for pure modules, Vue Test Utils or Nuxt testing utilitie
 | Install | `npm ci` | Lockfile respected; review install warnings |
 | Lint | `npm run lint` | Configured lint rules pass |
 | Typecheck | `npm run typecheck` (Nuxt typecheck) | Zero type errors |
-| Content validation | `npm run validate:content` | IDs, references, URLs, assets and EN/ID parity pass |
+| Content validation | Existing `npm run test:content`, production validation gate to be defined | PoC tests cover IDs, labels, states and URL form. Production tests must add references, asset rules and exact approved destinations. |
 | Unit/component | `npm run test:unit` | All required suites pass |
 | Static build | `npm run generate` | All published routes generated |
 | E2E | `npm run test:e2e` | All applicable cases pass; reports retained |
 | Audit | `npm audit` | Findings triaged, critical unresolved blocks release |
 
 Scripts are desired contracts, not confirmation of existing commands. Use `npm run` to inspect. Typecheck may require configured `vue-tsc`/TypeScript; see https://nuxt.com/docs/api/commands/typecheck . Do not use npm run --if-present as release gate because missing checks must be visible. Playwright browser installation only after tool approval.
+
+On the agreed Phase 5 CI runner, repeat the audited dependency tree, typecheck, content tests and static generation. Recheck the plugin, Nitro storage and i18n timer diagnostics. Inspect generated EN/ID HTML, catalog parity, release metadata and fixture/dependency exclusion. Verify the staging root redirect, 404 and security headers with IT. Record the audit disposition and UAT evidence for Phase 6. [Architecture review](07-ARCHITECTURE.md) · [Security triage](17-SECURITY.md)
 
 ## 7. Unit and integration scenarios
 

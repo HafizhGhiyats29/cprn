@@ -1,8 +1,8 @@
 # 07 — System Architecture
 
-Version 0.2 | Phase 2 PoC implemented | Production architecture and release verification pending
+Version 0.3 | 2026-11-27 | Review recommendation: **Phase 2 Conditionally Approved** | Reviewer sign-off pending
 
-## Phase 2 proof of concept
+## Phase 2 implementation record
 
 - Installed exact versions: `@nuxtjs/i18n 10.7.0`, `typescript 5.9.3`, and `vue-tsc 3.3.14`. The i18n package requires Node >=20.11.1 and brings Nuxt Kit ^4.7.0 and Vue Router ^5.5.1, compatible with the existing Nuxt/Router versions. The TypeScript version meets vue-tsc's TypeScript >=5.0.0 peer range. Windows verification used Node 26.13.1 and npm 12.2.3. Nuxt's locked Node engines are `^22.22.3 || ^24.15.0 || >=26.0.0`.
 - `app.vue` provides the Nuxt shell, `layouts/default.vue` the shared layout, and `pages/index.vue` the temporary verification page. `components/LanguageSwitcher.vue` uses the module's equivalent-route helper. The verification page carries `noindex, nofollow`.
@@ -11,7 +11,7 @@ Version 0.2 | Phase 2 PoC implemented | Production architecture and release veri
 
 | Command or check | Exit | Observed result |
 |---|---:|---|
-| `git rev-parse --verify HEAD` | 128 | No initial commit. Source baselines for edited files were copied outside the repository and checked with SHA-256 before editing. |
+| `git rev-parse --verify HEAD` | 128 | No initial commit at the time of PoC implementation. Source baselines were checked with SHA-256 before edits. See the later Git result below. |
 | `npm install --save-exact @nuxtjs/i18n@10.7.0` and `npm install --save-dev --save-exact typescript@5.9.3 vue-tsc@3.3.14` | 0 each | Existing package versions in the lockfile were preserved. The policy blocked an esbuild 0.25.12 dependency script. |
 | `npm ci --offline --no-audit --logs-max=0` | 0 | Clean install and `nuxt prepare` completed in an isolated temporary copy using the populated npm cache. The script policy stayed in effect. |
 | `npm ls --depth=0` | 0 | All eight expected direct packages were present at the selected versions. |
@@ -28,6 +28,42 @@ Nuxt reported plugin metadata optimization warnings `NUXT_B2010` and `NUXT_B2014
 
 Baseline: [requirements](01-REQUIREMENT-ANALYSIS.md), [scope](04-PROJECT-SCOPE.md), [NFR](03-NON-FUNCTIONAL-REQUIREMENTS.md).
 
+## Phase 2 closure verification
+
+Application baseline `595808f8efcd00355af6ffccf1d0a0af494fdcae` on `main`, matching the local `origin/main` tracking ref. The working tree was clean at inspection. A local `.gitignore` edit appeared during the review and was preserved. The closure review used Windows, Node `24.15.0`, npm `11.12.1` and Git `2.51.0.windows.2`. No CI runner or standard runtime has been approved.
+
+| Command or check | Exit | Observed result |
+|---|---:|---|
+| `git rev-parse --verify HEAD`, `git log --oneline --decorate -5`, `git status --short --branch` | 0 each | Initial commit exists. Application baseline and current worktree inspected. |
+| `npm.cmd run typecheck` | 0 | No TypeScript errors. `NUXT_B2010` and `NUXT_B2014` reproduced. |
+| `npm.cmd run test:content` | 0 | Five tests passed with zero failures. |
+| `npm.cmd run generate` | 0 | Eight prerendered routes. Both Nuxt plugin diagnostics, Nitro cache-driver externalization, and paired i18n timer warnings reproduced. |
+| `node <temporary-directory>/check-public.mjs` | 0 | Verified SSR HTML title, h1, `lang`, translated navigation and reciprocal switch links, locale catalog parity, `noindex`, both message JSONs, and fallback file. Root HTML and `.output/server` were absent. Scanned 20 text assets including six JS chunks for fixture and matcher markers. No matches. |
+| `npm.cmd ls minimatch --all --logs-max=0`, `npm.cmd explain minimatch --logs-max=0` | 0 each | Two installed copies. The nested `10.2.6` is the affected copy. |
+| `npm.cmd audit --json --fetch-retries=0 --fetch-timeout=12000 --logs-max=0` | 1 | Registry audit available. Nine moderate entries from one advisory. No high or critical entries. See [security triage](17-SECURITY.md). |
+
+The browser navigation and hydration evidence in the implementation record and prior development-environment report applies to the same application baseline. Closure repeated the checks above. Full cross-browser tests, production-host behavior, SEO, and UAT remain Phase 5/6 work. The repository has no lint or E2E script.
+
+### Architecture quality review
+
+| Area | Finding and follow-up |
+|---|---|
+| Composition and state | The shell delegates to the layout and page. The layout owns HTML language and the shared switcher. The page uses a local `ref` for a single disclosure, and the switcher uses the module route helper. No parallel state store or redundant route implementation was found. |
+| Locale consistency | Configuration, explicit prerender routes and the typed data locale list each encode EN/ID. Catalog keys are currently in parity. Check alignment if locale support changes. Layout `lang` and link `hreflang` work for the PoC. Production canonical and head-level reciprocal alternates still require separate verification. |
+| Content validation | The validator and domain types are exercised by tests. The PoC page reads UI messages, and `generate` has no production content validation gate. Connect approved records and enforce references, asset rules, and exact approved Interconf destinations when production content is implemented. |
+| Publishing boundary | `noindex, nofollow` applies to the verification page. Preview access controls belong to the host. `robots.txt` alone cannot restrict access. Verify DevTools output, public artifact contents and metadata on the release candidate. |
+| Dependency version evidence | The installed Nitro package manifest and lockfile report `2.14.0`. `.output/nitro.json` reports Nitro `2.13.6`, which matches the literal in `nitropack/dist/meta/index.mjs`. Use the installed manifest and resolved tree for audit versions. Recheck generated metadata on the agreed CI runner. |
+| Documentation fit | The original Phase 1 roadmap still reflects its snapshot before the first commit. This review records current evidence here. `doc/` is the actual path. Broader speaker, schedule, publication and editorial models remain drafts. |
+
+### Reproduced warnings
+
+| Diagnostic | Meaning and verification follow-up |
+|---|---|
+| `NUXT_B2010` | Nuxt cannot statically extract plugin metadata from generated `#build/components.plugin.mjs` and uses runtime metadata. Track on CI and retest component behavior after dependency changes. |
+| `NUXT_B2014` | The i18n runtime plugin's `parallel` metadata is not statically resolvable by the Nuxt optimizer. Typecheck and generation succeeded. Recheck on the agreed CI runtime before changing plugin or framework versions. |
+| Nitro `cache-driver.mjs` externalization | On Windows, Nuxt's Nitro adapter supplies a `file:` URL. Rollup's virtual storage module reports it as unresolved and treats it as external. The local static artifact was created and contains no server entry. Verify generation on the selected runner and investigate if deployment adds server or cache behavior. |
+| `i18n:beforeLocaleSwitch` timer warnings | The same diagnostic timer label was started more than once and an ensuing `timeEnd` found no timer. Overlapping hook instrumentation during prerender is consistent with these messages. Both locales generated correctly. Recheck in CI and confirm repeated locale switching in Phase 5. |
+
 ## 1. System context
 
 ```mermaid
@@ -40,7 +76,7 @@ flowchart TD
   U -->|Approved optional links| X[Documents / maps / accommodation]
 ```
 
-Proposed: modular Nuxt application, build-time content and public static output. No internal API, database, login, payment or CMS for MVP. Interconf is outside the system boundary; no collection of participant credentials. Analytics optional, pending approval.
+The local baseline uses a modular Nuxt application and public static output. The MVP excludes an internal API, database, login, payment and CMS. The external Interconf handoff will use approved links. Analytics remains optional and pending approval.
 
 ## 2. Proposed folder structure
 
@@ -59,7 +95,7 @@ public/
   images/
   logos/
   documents/
-i18n/                   # Proposed; module configuration TBD
+i18n/                   # Nuxt i18n catalogs implemented
   locales/{en,id}.json
 tests/                 # Node content tests and isolated fixtures; E2E tooling is proposed
 doc/
@@ -71,13 +107,13 @@ The PoC establishes the app shell, layout, page, language switcher, locale catal
 
 ## 3. Rendering and localization decisions
 
-| Topic | Proposal | Validation required |
+| Topic | Decision or proposal | Verification or remaining work |
 |---|---|---|
-| Public pages | SSG/prerender, HTML available before JS | Production build and both locales generated |
-| Interactions | Vue hydration for menus, tabs, accordion | No hydration mismatch; keyboard support |
-| i18n | Evaluate @nuxtjs/i18n, EN/ID, both prefixed routes | Installed version compatibility; verify locale config and URL scheme |
-| Default locale | EN, root redirect or entry page | Mentor approval; host supports chosen behavior |
-| Content | Typed TS/JSON data, shared stable IDs, localized fields | Validation for required translations and official data |
+| Public pages | SSG/prerender, HTML available before JS | Both locale pages generated locally. Verify the full route inventory on CI and host. |
+| Interactions | Vue hydration for interactive components | Disclosure and language switching verified. Future menus, tabs and accordions require Phase 5 QA. |
+| i18n | `@nuxtjs/i18n`, EN/ID with both routes prefixed | PoC configuration and output verified locally. |
+| Default locale | EN with browser detection disabled | Local i18n default verified. Production root redirect or entry remains an external decision. |
+| Content | Local typed data and source-code editorial workflow | Fixture and minimal validator verified. Production schema, wiring and content approval are pending. |
 | SEO | Locale-specific title, canonical and reciprocal hreflang | Generated HTML audit |
 | Host | Static hosting first; SSR only if justified by new scope | IT approval, direct URLs, 404, HTTPS, cache, rollback |
 
@@ -110,15 +146,18 @@ type Registration =
 
 The speaker and media examples illustrate the broader design. The PoC uses the registration union and an independent login availability union. Use stable IDs for sessions/speakers, shared dates with explicit event timezone, shared fee amount and currency, localized labels, and approved asset paths. Separate UI translation keys from event content. Validate data references, links, status, required locales and publication permissions before build/release.
 
-## 5. Phase 2 exit checklist
+## 5. Phase 2 closure checklist
 
-- [x] Inspect package.json, lockfile, Node/npm versions, Git status and config.
-- [x] Record local compatibility and audit results.
-- [x] Implement and generate the bilingual SSG PoC.
-- [x] Verify the generated output on a local static server in Chrome.
-- [x] Record decisions and prepare the root AGENTS.md.
-- [ ] Review moderate audit findings and confirm the CI runtime.
-- [ ] Approve production root/404 policy, host constraints and production content contracts.
+- [x] Confirm the initial commit, application baseline, lockfile and local runtime. Preserve local developer edits.
+- [x] Verify the bilingual SSG PoC, typecheck, content tests, generated locale HTML and fixture exclusion. Retain prior local Chrome evidence.
+- [x] Triage the nine moderate entries and document reachability, limits, remediation options and Phase 5/6 disposition.
+- [x] Synchronize ADRs and the root `AGENTS.md` with the repository and document known warnings.
+- [ ] Obtain developer or designated reviewer sign-off for conditional closure and authorization to start Phase 3.
+- [ ] Confirm official branding before high-fidelity approval. Obtain official event content, translations, asset permissions and Interconf URLs before the applicable production acceptance tests.
+- [ ] Phase 5: verify the release candidate on the approved CI runner. Re-audit dependencies, check generated content and browser coverage, and test staging routing, headers, security and official links.
+- [ ] Phase 6: obtain IT sign-off on hosting/domain, root redirect and 404, headers, CI runtime, security disposition and release evidence. Verify rollback and production smoke when authorized.
+
+**Recommendation — Phase 2 Conditionally Approved.** The verified technical baseline can support Phase 3 sitemap, flows and wireframes after authorization. Official brand assets are required for high-fidelity approval. The pending external decisions and production checks remain release gates.
 
 ## 6. Layer contracts and dependency direction
 
@@ -172,16 +211,27 @@ Use separation of concerns and single source of truth. Review page files above 2
 
 ## 9. Architecture decision register
 
-| ADR | Decision | State | Alternative / tradeoff |
+| ADR | Decision | State | Evidence or dependency |
 |---|---|---|---|
-| ADR-001 | Nuxt 4 + Vue 3 + TypeScript + Tailwind v4 | Developer validated | Existing ecosystem preferred |
-| ADR-002 | Build-time static rendering, hydration for interactions | Implemented for PoC | SSR enables runtime content but adds server operations |
-| ADR-003 | EN/ID prefixed locale routes, default EN, detection disabled | Implemented for PoC; production root policy pending | Unprefixed EN gives shorter URLs and asymmetric routing |
-| ADR-004 | Source-code typed content; no DB/CMS | Developer validated scope; schema draft | CMS requires scope change |
-| ADR-005 | External Interconf integration through links | Developer validated | No internal participant flow |
-| ADR-006 | Static host and immutable artifact releases | Proposed; host TBD | SSR deployment only if approved |
-| ADR-007 | UI library/icon/image tooling | TBD | Prefer existing dependencies; assess accessibility and bundle |
-| ADR-008 | No analytics before approval | Proposed privacy safeguard | Real counter only with policy and integration |
+| ADR-001 | Nuxt 4 and Vue 3 Composition API, TypeScript, Tailwind CSS v4 | Developer baseline and locally verified | Nuxt `4.7.0`, Vue `3.5.46`, TypeScript `5.9.3`, Tailwind `4.3.5`. Typecheck, app render and static build passed. |
+| ADR-002 | Build-time SSG with Vue hydration | Implemented and locally verified | `ssr: true`, both locale HTMLs and prior Chrome interactions. Static hosting approval is tracked by ADR-006. |
+| ADR-003 | Nuxt i18n, English and Indonesian prefix routes, English default, browser detection disabled | Implemented and locally verified | `@nuxtjs/i18n 10.7.0`, `prefix`, `/en`, `/id`, equivalent links and generated catalogs. Host root behavior is independent. |
+| ADR-004 | Local typed data, source-code content management, no database, CMS or internal backend for the MVP | Developer baseline. Minimal data contract and backend-free PoC verified. | Typed EN/ID fixture and validator tests. Final data schema, content and wiring pending. |
+| ADR-005 | Registration and login via approved external Interconf links | Developer baseline. Production integration pending. | Separate link states verified through the validator. Official destinations and CTA QA await the committee and IT. |
+| ADR-006 | Publish an immutable static artifact to approved hosting | Proposed technical and operational approach | Host, domain, delivery policy and rollback approval pending IT. |
+| ADR-007 | Custom Vue components for the current UI | Implemented and locally verified for the PoC | `LanguageSwitcher.vue` and native disclosure. Complete component system and any optional UI, icon or image tooling remain design decisions. |
+| ADR-008 | Analytics requires separate approval | Proposed privacy safeguard | No analytics configured in the app. Any integration depends on policy approval. |
+| ADR-009 | Local Vue state for component interactions | Implemented and locally verified | `ref(false)` drives the PoC disclosure. Route and locale state belong to Nuxt i18n. |
+| ADR-010 | Repository documentation lives under `doc/` | Established and verified in Git | `doc/00-INDEX.md` is the entry point. Phase 1 documents retain their planning snapshot. |
+
+| Pending external decision | Responsible reviewer | Production verification |
+|---|---|---|
+| Hosting and domain | IT | Phase 5 staging parity and Phase 6 authorization, TLS and smoke test |
+| HTTP redirect for `/` and real 404 behavior | IT, with developer/mentor review | Phase 5 route/status tests and Phase 6 host configuration and smoke |
+| Security headers and cache policy | IT | Phase 5 staging headers and CSP checks, Phase 6 production verification |
+| CI runner, Node/npm standard and lifecycle-script policy | Developer and IT | Phase 5 clean install and reproducible checks, Phase 6 release pipeline |
+| Official event content and branding | Mentor and committee | Branding before Phase 3 high-fidelity approval. Phase 5 verifies EN/ID parity and publication rights, Phase 6 records approvals. |
+| Official Interconf registration and login URLs | Committee and IT | Phase 5 approved destinations and status checks, Phase 6 release confirmation |
 
 ## 10. Phase 2 inspection procedure
 

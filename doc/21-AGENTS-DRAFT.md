@@ -1,6 +1,6 @@
 # 21 — AGENTS.md Candidate (Phase 2)
 
-Status: revised during Phase 2. The [root AGENTS.md](../AGENTS.md) is the operational version prepared for this repository. This document records the review and remaining decisions.
+Status: Phase 2 review record. The [root AGENTS.md](../AGENTS.md) is the operational version and reflects the verified baseline and outstanding release gates.
 
 ## Candidate instructions
 
@@ -19,4 +19,5 @@ Status: revised during Phase 2. The [root AGENTS.md](../AGENTS.md) is the operat
 - [x] PoC architecture, locale routing and data choices reflected in the prepared root file.
 - [x] Root checked for existing instructions. No previous root AGENTS.md was present.
 - [ ] Team AI policy, Git conventions and design process confirmed.
-- [ ] Developer reviews production open decisions and records the first baseline commit when authorized.
+- [x] Initial baseline commit `595808f` confirmed on `main`.
+- [ ] Developer and IT confirm pending production and CI decisions in the [architecture register](07-ARCHITECTURE.md).

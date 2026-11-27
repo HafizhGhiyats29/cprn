@@ -1,17 +1,17 @@
 # 20 — Final Release Readiness Audit
 
-Version 0.2 | **NOT READY — evidence not collected** | No application, test suite or production deployment inspected by this documentation task.
+Version 0.3 | **NOT READY — release evidence pending** | Phase 2 local PoC evidence is recorded separately.
 
 ## 1. Executive summary
 
-Planning baseline validated by developer: new conference site, bilingual EN/ID, Nuxt/Vue/TypeScript/Tailwind, source-code content, Interconf external registration, institutional branding. Formal mentor approval, actual repository configuration, approved content/design, deployment provider and verification results remain pending. Unlike the supplied portal audit, no pass counts, performance scores or claims of zero errors are copied.
+The developer baseline covers a bilingual Nuxt conference microsite with source-code content, institutional branding and external Interconf registration and login. The local PoC review recommends conditional Phase 2 closure. Formal mentor approval, production branding and content, approved Interconf destinations, IT host/domain and release candidate evidence remain pending. [Phase 2 review](07-ARCHITECTURE.md)
 
 ## 2. Release gates and evidence
 
 | Gate | Required evidence | Owner proposal | State |
 |---|---|---|---|
 | Scope | Approved applicable Must list and change decisions | Mentor | Pending |
-| Architecture | ADRs, actual versions and SSG/i18n decisions | Developer/IT | Pending |
+| Architecture | ADRs, actual versions and SSG/i18n decisions, plus an approved host and runner | Developer/IT | Local evidence recorded. Production decisions pending. |
 | Branding | Approved Figma version, asset rights and tokens | Mentor/committee | Pending |
 | Content | Official event details, EN/ID and link approvals | Committee | Pending |
 | Code review | PR checks and reviewer approval | Developer | Pending |
@@ -20,7 +20,7 @@ Planning baseline validated by developer: new conference site, bilingual EN/ID, 
 | Browser/DPI | Chromium, Firefox, WebKit, mobile, scaling evidence | QA | Not Run |
 | Accessibility | Automated and manual WCAG review, issue disposition | QA | Not Run |
 | Performance | Lighthouse lab results, field data if available | QA | Not Run |
-| Security | Audit triage, secrets review, headers, external URLs | IT/developer | Not Run |
+| Security | Re-audit release candidate, record dependency disposition, inspect secrets, headers and external URLs | IT/developer | PoC triage recorded. Release checks pending. |
 | SEO | Generated HTML, sitemap, robots, canonical, hreflang | QA | Not Run |
 | UAT | Applicable scenarios passed, defects closed, sign-off | Mentor/committee | Not Run |
 | Build | Reproducible artifact, commit and checksum | Developer | Not Run |
@@ -54,7 +54,7 @@ A planned test is not an executed test. Lighthouse is not proof of WCAG complian
 | Content translation drift | Misinformation | Shared IDs, review parity and bilingual gate | TBD |
 | Static content update delay | Stale agenda/status | Document expedited release workflow | TBD |
 | Hosting behavior mismatch | Locale deep links/404 fail | Host validation and rollback rehearsal | TBD |
-| Supply-chain changes | Build/security risk | Locked deps, reviewed updates, audit | TBD |
+| Dependency advisory and supply-chain changes | CI/build availability and reproducible releases | Re-audit the locked tree. Verify remediation or document IT-approved, time-bounded acceptance. | Phase 2 triage recorded. Release disposition pending. |
 | Unapproved imagery | Institutional/legal risk | Asset manifest and consent | TBD |
 | Late brand or event changes | Rework | Approval before full development; change control | TBD |
 | No approved analytics | Limited field measurement | Lab reports; analytics only after privacy approval | TBD |
